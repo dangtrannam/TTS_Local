@@ -1,0 +1,22 @@
+{
+  "name": "@tts-local/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "tts-local": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc --build",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tts-local/core": "workspace:*",
+    "@tts-local/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "tsx": "^4.7.0"
+  }
+}

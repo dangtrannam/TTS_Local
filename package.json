@@ -1,0 +1,38 @@
+{
+  "name": "tts-local",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev:cli": "pnpm --filter @tts-local/cli dev",
+    "dev:electron": "pnpm --filter @tts-local/electron dev",
+    "build": "pnpm --recursive run build",
+    "type-check": "pnpm --recursive run type-check",
+    "lint": "eslint packages/*/src --ext .ts,.tsx",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\"",
+    "test": "vitest run",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
