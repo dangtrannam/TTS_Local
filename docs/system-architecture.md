@@ -2,7 +2,7 @@
 
 **Project**: TTS_Local
 **Last Updated**: 2026-02-15
-**Phase**: Phase 02 Complete (Piper TTS Core)
+**Phase**: Phase 03 Complete (CLI Application)
 
 ---
 
@@ -17,7 +17,20 @@ TTS_Local uses a layered architecture with clear separation between services, ut
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Application Layer                         │
-│         (CLI / Electron - Not Yet Implemented)               │
+│  ┌──────────────────────┐        ┌───────────────────────┐  │
+│  │   CLI Application    │        │ Electron GUI (Phase 4)│  │
+│  │  (4 Commands)        │        │                       │  │
+│  └──────────────────────┘        └───────────────────────┘  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Interface Layer (@tts-local/cli)            │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │ Audio Player │  │ Config Mgr   │  │ CLI Output       │  │
+│  │ (Platform-   │  │ (JSON CRUD)  │  │ (Colors/Spinner) │  │
+│  │  aware)      │  │              │  │                  │  │
+│  └──────────────┘  └──────────────┘  └──────────────────┘  │
 └────────────────────────┬────────────────────────────────────┘
                          │
                          ▼
@@ -77,6 +90,108 @@ TTS_Local uses a layered architecture with clear separation between services, ut
 ---
 
 ## Component Responsibilities
+
+### Interface Layer (CLI Application)
+
+#### Audio Playback Layer
+**Role**: Platform-aware audio output for synthesized speech
+
+**Supported Platforms:**
+- **macOS**: `afplay` command
+- **Linux**: `paplay`, `aplay`, or `ffplay` (fallback order)
+- **Windows**: PowerShell audio playback
+
+**Key Features:**
+- Automatic platform detection
+- Graceful fallback chains
+- Error messages if no player available
+- Cleanup on process termination
+
+#### CLI Commands (4 Command Handlers)
+
+##### 1. speak-command.ts
+**Purpose**: Synthesize text and playback or save to file
+
+**Inputs:**
+- Direct text argument: `tts speak "Hello world"`
+- File input: `tts speak --file <path>`
+- Stdin piping: `echo "text" | tts speak`
+
+**Options:**
+- `--output, -o <file>` - Save to WAV file instead of playing
+- `--voice <name>` - Override default voice
+- `--speed <value>` - Adjust synthesis speed
+
+**Workflow:**
+1. Read input (text/file/stdin with size validation)
+2. Call PiperTTSService.synthesize()
+3. Play audio via audio-player or save to file
+4. Report progress and handle errors
+
+##### 2. setup-command.ts
+**Purpose**: Download and cache Piper binary and voice models
+
+**Workflow:**
+1. Ensure binary with progress callbacks
+2. Ensure voice model with progress callbacks
+3. Show installation paths and success status
+
+##### 3. voices-command.ts
+**Purpose**: List installed voice models
+
+**Output:**
+- Directory scan of installed models
+- Display model names and metadata
+
+##### 4. config-command.ts
+**Purpose**: Manage configuration file
+
+**Subcommands:**
+- `tts config` - Show current configuration
+- `tts config set <key> <value>` - Update setting
+- `tts config reset` - Reset to defaults
+
+#### Utility Modules
+
+##### cli-output.ts
+**Purpose**: Unified terminal output formatting
+
+**Features:**
+- Color output via chalk
+- Spinner animations via ora
+- Success/error/info message formatting
+- Progress reporting
+
+##### input-reader.ts
+**Purpose**: Handle multiple input modes with validation
+
+**Features:**
+- Argument parsing
+- File reading with path sanitization
+- Stdin reading with size limits (100K char max)
+- Empty input detection
+
+##### config-manager.ts
+**Purpose**: JSON configuration file management
+
+**Location**: `~/.config/tts-local/config.json` (XDG-compliant)
+
+**Schema:**
+```typescript
+{
+  voice: string;          // e.g., "en_US-amy-medium"
+  speed: number;          // 0.5 - 2.0
+  outputDir?: string;     // Optional output directory
+}
+```
+
+**Operations:**
+- Load with validation
+- Save with schema validation
+- Reset to defaults
+- File permissions: 0o600 on Unix
+
+---
 
 ### Service Layer
 
@@ -500,15 +615,45 @@ Each downloaded resource has a `.version` file containing the version string. Th
 
 ---
 
+## Error Handling in CLI
+
+### CLI-Specific Error Codes (18 total)
+
+| Code | Trigger | User Message |
+|------|---------|--------------|
+| CLI_NO_INPUT | No text provided | "Please provide text to synthesize" |
+| CLI_INVALID_FILE | File not found | "File not found or not readable" |
+| CLI_FILE_EMPTY | File has no content | "File is empty" |
+| CLI_FILE_TOO_LARGE | File > 100KB | "File too large (max 100KB)" |
+| CLI_STDIN_NO_DATA | Stdin with no input | "No input provided" |
+| CLI_STDIN_TIMEOUT | Stdin read timeout | "Timeout reading from stdin" |
+| CLI_STDIN_TOO_LARGE | Stdin > 100KB | "Input too large (max 100KB)" |
+| CLI_VOICE_NOT_FOUND | Voice not installed | "Voice model not found. Run `tts setup` first" |
+| CLI_VOICE_INVALID | Invalid voice name | "Invalid voice name format" |
+| CLI_INVALID_OUTPUT_PATH | Bad output path | "Invalid output file path" |
+| CLI_OUTPUT_WRITE_FAILED | Can't write file | "Failed to write output file" |
+| CLI_NO_AUDIO_PLAYER | No player available | "No audio player found. Install afplay (macOS), paplay (Linux), or PowerShell (Windows)" |
+| CLI_AUDIO_PLAYBACK_FAILED | Player error | "Audio playback failed" |
+| CLI_CONFIG_NOT_FOUND | Config missing | "Configuration not found. Run `tts config set` to configure" |
+| CLI_CONFIG_INVALID | Bad config file | "Configuration file corrupted. Run `tts config reset` to fix" |
+| CLI_CONFIG_WRITE_FAILED | Can't write config | "Failed to save configuration" |
+| CLI_INVALID_VOICE_OPTION | Bad --voice arg | "Invalid voice specification" |
+| CLI_INVALID_SPEED_OPTION | Bad --speed arg | "Speed must be between 0.5 and 2.0" |
+
+### Graceful Degradation
+
+- **Missing audio player**: Suggest installation, offer file save as fallback
+- **Missing voice model**: Suggest running `tts setup`
+- **Corrupted config**: Auto-reset to defaults with notification
+- **Interrupted by Ctrl+C**: Clean up temp files, exit gracefully
+
+---
+
 ## Future Architecture Changes
 
-### Phase 03 (CLI)
-- Add Commander.js command routing
-- Integrate Inquirer for interactive mode
-- Add play-sound for audio playback
-- Add config file management
-
 ### Phase 04 (Electron)
+- Wrap CLI logic in Electron main process
+- React-based renderer UI
 - Add React renderer
 - Add IPC bridge (main ↔ renderer)
 - Add Web Audio API integration
@@ -524,4 +669,4 @@ Each downloaded resource has a `.version` file containing the version string. Th
 
 **Diagram Generation**: ASCII art created manually
 **Last Reviewed**: 2026-02-15
-**Next Review**: After Phase 03 CLI implementation
+**Next Review**: After Phase 04 Electron implementation

@@ -62,8 +62,10 @@ TTS_Local/
 packages/{package}/
 ├── src/
 │   ├── services/          # Business logic, orchestration
+│   ├── commands/          # CLI commands (CLI package only)
 │   ├── utils/             # Pure functions, helpers
 │   ├── config/            # Constants, configuration
+│   ├── bin.ts             # Executable entry point (CLI only)
 │   └── index.ts           # Public API exports
 ├── __tests__/             # Test files (if not colocated)
 ├── package.json
@@ -88,6 +90,23 @@ src/utils/
 ├── download-helper.ts         # Download utilities
 ├── audio-utils.ts             # Audio processing
 └── error-handler.ts           # Error formatting
+```
+
+### CLI-Specific Organization
+```
+packages/cli/src/
+├── bin.ts                    # Node shebang entry point
+├── index.ts                  # CLI program factory
+├── commands/                 # Command handlers
+│   ├── speak-command.ts     # Synthesize and play/save
+│   ├── setup-command.ts     # Download binary/models
+│   ├── voices-command.ts    # List installed voices
+│   └── config-command.ts    # Configuration management
+└── utils/                   # CLI utilities
+    ├── cli-output.ts        # Terminal output (colors, spinners)
+    ├── input-reader.ts      # stdin/file/argument input
+    ├── audio-player.ts      # Platform-aware audio playback
+    └── config-manager.ts    # JSON config file CRUD
 ```
 
 ---
@@ -305,6 +324,180 @@ export { TTSError, TTSErrorCode } from '@tts-local/types';
 
 // Default exports (avoid for libraries, OK for applications)
 // ❌ Avoid: export default class PiperTTSService { }
+```
+
+---
+
+## CLI-Specific Patterns
+
+### Command Handler Structure
+```typescript
+/**
+ * Command handler for 'speak' command
+ * Synthesizes text and plays or saves audio
+ */
+export async function registerSpeakCommand(program: Command): Promise<void> {
+  program
+    .command('speak [text]')
+    .description('Synthesize and play text')
+    .option('--file <path>', 'Read text from file')
+    .option('--output, -o <file>', 'Save to WAV file')
+    .option('--voice <name>', 'Override default voice')
+    .action(async (text: string | undefined, options: SpeakOptions) => {
+      try {
+        // Implementation...
+      } catch (error) {
+        handleError(error);
+        process.exit(1);
+      }
+    });
+}
+```
+
+### Input Validation Pattern (CLI)
+```typescript
+// Validate inputs from multiple sources
+async function readInput(text: string | undefined, options: Options): Promise<string> {
+  if (text) {
+    validateText(text);
+    return text;
+  }
+
+  if (options.file) {
+    const path = sanitizePath(options.file);
+    const content = await fs.readFile(path, 'utf-8');
+    if (!content.trim()) throw new TTSError(CLI_FILE_EMPTY, 'File is empty');
+    return content;
+  }
+
+  // Try stdin with timeout
+  const stdin = await readStdin(5000); // 5s timeout
+  if (!stdin.trim()) throw new TTSError(CLI_NO_INPUT, 'No input provided');
+  return stdin;
+}
+
+// Size validation
+function validateText(text: string): void {
+  if (text.length > 100_000) {
+    throw new TTSError(CLI_STDIN_TOO_LARGE, 'Input too large (max 100KB)');
+  }
+}
+
+// Path sanitization to prevent traversal
+function sanitizePath(userPath: string): string {
+  const resolved = path.resolve(userPath);
+  if (!resolved.startsWith(process.cwd())) {
+    throw new TTSError(CLI_INVALID_FILE, 'Invalid file path');
+  }
+  return resolved;
+}
+```
+
+### Configuration Management Pattern (CLI)
+```typescript
+interface CLIConfig {
+  voice: string;
+  speed: number;
+  outputDir?: string;
+}
+
+class ConfigManager {
+  private configPath: string;
+
+  async load(): Promise<CLIConfig> {
+    try {
+      const data = await fs.readFile(this.configPath, 'utf-8');
+      return JSON.parse(data) as CLIConfig;
+    } catch {
+      return this.defaults();
+    }
+  }
+
+  async save(config: CLIConfig): Promise<void> {
+    const dir = path.dirname(this.configPath);
+    await fs.ensureDir(dir);
+    await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
+    // Unix: restrict to user only
+    if (process.platform !== 'win32') {
+      await fs.chmod(this.configPath, 0o600);
+    }
+  }
+
+  private defaults(): CLIConfig {
+    return {
+      voice: 'en_US-amy-medium',
+      speed: 1.0,
+    };
+  }
+}
+```
+
+### Output Formatting Pattern (CLI)
+```typescript
+import chalk from 'chalk';
+import ora from 'ora';
+
+// Unified output interface
+class CliOutput {
+  success(message: string): void {
+    console.log(chalk.green('✓') + ' ' + message);
+  }
+
+  error(message: string): void {
+    console.error(chalk.red('✗') + ' ' + message);
+  }
+
+  info(message: string): void {
+    console.log(chalk.blue('ℹ') + ' ' + message);
+  }
+
+  spinner(text: string) {
+    return ora(text).start();
+  }
+}
+
+// Usage
+const output = new CliOutput();
+const spinner = output.spinner('Downloading voice model...');
+try {
+  await downloadVoice();
+  spinner.succeed('Voice model ready');
+} catch (error) {
+  spinner.fail('Download failed');
+  output.error(formatErrorForUser(error));
+}
+```
+
+### Platform-Aware Audio Playback (CLI)
+```typescript
+async function playAudio(audioPath: string): Promise<void> {
+  const platform = detectPlatform();
+  let command: string;
+  let args: string[];
+
+  if (platform.os === 'darwin') {
+    command = 'afplay';
+    args = [audioPath];
+  } else if (platform.os === 'linux') {
+    // Try multiple players in order
+    for (const player of ['paplay', 'aplay', 'ffplay -nodisp -autoexit']) {
+      if (await commandExists(player)) {
+        command = player;
+        args = [audioPath];
+        break;
+      }
+    }
+    if (!command) {
+      throw new TTSError(CLI_NO_AUDIO_PLAYER, 'No audio player available');
+    }
+  } else if (platform.os === 'win32') {
+    // PowerShell audio playback
+    command = 'powershell.exe';
+    args = ['-Command', `(New-Object System.Media.SoundPlayer '${audioPath}').PlaySync()`];
+  }
+
+  await execa(command, args);
+}
 ```
 
 ---

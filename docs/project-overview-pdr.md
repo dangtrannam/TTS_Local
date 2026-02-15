@@ -2,7 +2,7 @@
 
 **Project**: TTS_Local
 **Version**: 0.1.0
-**Status**: Phase 02 Complete
+**Status**: Phase 03 Complete (CLI Application)
 **Last Updated**: 2026-02-15
 
 ---
@@ -61,20 +61,24 @@ Democratize access to high-quality text-to-speech technology through local, priv
   - Speed control (0.5x - 2.0x)
   - Output file path (optional)
 
-#### CLI Application (Phase 03 - Pending)
-- **FR-05**: Command-line interface for TTS operations
+#### CLI Application (Phase 03 - Implemented)
+- **FR-05**: Command-line interface for TTS operations (✅)
   - `tts speak "text"` - Synthesize and play
-  - `tts save "text" -o output.wav` - Save to file
-  - `tts voices` - List available voices
-  - `tts download <voice>` - Pre-download voice models
-- **FR-06**: Interactive mode with prompts
+  - `tts speak --file <path>` - Read from file
+  - `echo "text" | tts speak` - Read from stdin
+  - `tts speak -o output.wav "text"` - Save to file
+  - `tts voices` - List installed voice models
+  - `tts setup` - Download binary and voice models
+- **FR-06**: Configuration management with prompts (✅)
   - Voice selection
   - Speed adjustment
-  - File input/output
-- **FR-07**: Configuration file support
+  - File input/output validation
+  - Config file CRUD operations
+- **FR-07**: Configuration file support (✅)
   - Default voice preference
   - Default speed setting
-  - Auto-download on first use
+  - Config stored at `~/.config/tts-local/config.json` (XDG-compliant)
+  - Validation on read/write
 
 #### Desktop Application (Phase 04 - Pending)
 - **FR-08**: Electron-based GUI application
@@ -138,15 +142,16 @@ Democratize access to high-quality text-to-speech technology through local, priv
 #### Workspace Packages
 - `@tts-local/core` - Piper TTS implementation (✅)
 - `@tts-local/types` - Shared TypeScript types (✅)
-- `@tts-local/cli` - CLI application (⏳)
+- `@tts-local/cli` - CLI application (✅)
 - `@tts-local/electron` - Desktop GUI (⏳)
 
 #### Key Dependencies
 - **execa** (9.6.1): Process spawning
 - **fs-extra** (11.3.3): File operations
 - **tar** (7.5.7): Archive extraction
-- **commander.js**: CLI framework (planned)
-- **inquirer**: Interactive prompts (planned)
+- **commander** (11.1.0): CLI framework (✅)
+- **chalk** (5.3.0): Terminal color output (✅)
+- **ora** (8.0.0): Spinners and progress (✅)
 - **electron**: Desktop framework (planned)
 
 ### Architecture Patterns
@@ -210,22 +215,26 @@ Utility Layer (Platform/Download/Audio)
 - WAV audio output with metadata
 - Error handling comprehensive
 
-### Phase 03: CLI Application (Pending)
-**Duration**: 2 days (estimated)
-**Status**: ⏳ Pending
+### Phase 03: CLI Application (Completed)
+**Duration**: 2 days (actual)
+**Status**: ✅ Complete
 
 **Deliverables:**
-- Commander.js command structure
-- Interactive prompts with Inquirer
-- Audio playback via play-sound
-- Configuration file management
-- Help documentation
+- ✅ Commander.js with 4 commands (speak, setup, voices, config)
+- ✅ Platform-aware audio playback (macOS/Linux/Windows)
+- ✅ Configuration file management (JSON with schema validation)
+- ✅ 4 utility modules (cli-output, input-reader, audio-player, config-manager)
+- ✅ 18 CLI-specific error codes with user-friendly messages
 
 **Success Criteria:**
-- `tts speak "text"` synthesizes and plays audio
-- `tts save "text" -o file.wav` saves to file
-- `tts voices` lists available voices
-- Error handling with recovery suggestions
+- ✅ `tts speak "text"` synthesizes and plays audio
+- ✅ `tts speak --file <path>` reads and speaks file
+- ✅ `echo "text" | tts speak` handles stdin piping
+- ✅ `tts speak -o file.wav "text"` saves WAV file
+- ✅ `tts setup` downloads binary and models with progress
+- ✅ `tts voices` lists installed models
+- ✅ `tts config` manages configuration
+- ✅ Error handling with user-friendly suggestions
 
 ### Phase 04: Desktop Application (Pending)
 **Duration**: 3 days (estimated)
@@ -274,12 +283,14 @@ Utility Layer (Platform/Download/Audio)
 - [x] Error handling comprehensive with typed errors
 
 ### Phase 03 (CLI)
-- [ ] `tts speak "text"` synthesizes and plays audio
-- [ ] `tts save "text" -o file.wav` creates valid WAV file
-- [ ] `tts voices` lists available voices
-- [ ] Interactive mode works with prompts
-- [ ] Configuration file loaded and applied
-- [ ] Help text clear and comprehensive
+- [x] `tts speak "text"` synthesizes and plays audio
+- [x] `tts speak -o file.wav "text"` creates valid WAV file
+- [x] `tts voices` lists installed voices
+- [x] `tts setup` downloads binary and models with progress
+- [x] Configuration file loaded and applied
+- [x] Help text clear and comprehensive
+- [x] Stdin piping support (`echo "text" | tts speak`)
+- [x] File input support (`tts speak --file <path>`)
 
 ### Phase 04 (Electron)
 - [ ] Desktop app launches without errors
@@ -429,6 +440,7 @@ All dependencies use permissive licenses (MIT, Apache 2.0, ISC):
 
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
+| 2026-02-15 | 0.1.0 | Updated for Phase 03 (CLI) completion; added CLI commands and dependencies | docs-manager |
 | 2026-02-15 | 0.1.0 | Initial PDR created after Phase 02 completion | docs-manager |
 
 ---

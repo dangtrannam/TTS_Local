@@ -3,7 +3,7 @@
 **Project**: TTS_Local - Cross-platform Text-to-Speech Application
 **Version**: 0.1.0
 **Last Updated**: 2026-02-15
-**Status**: Phase 02 Complete (Piper TTS Core Implementation)
+**Status**: Phase 03 Complete (CLI Application)
 
 ---
 
@@ -99,8 +99,37 @@ TTSError          // Custom error class
 
 ### @tts-local/cli
 
-**Status**: Skeleton created (Phase 03 pending)
-**Purpose**: Command-line interface for TTS operations
+**Status**: Implemented (Phase 03 ✅)
+**Dependencies**: commander@11.1.0, chalk@5.3.0, ora@8.0.0, @tts-local/core, @tts-local/types
+
+**Directory Structure:**
+```
+packages/cli/src/
+├── bin.ts                          # Node shebang entry point
+├── index.ts                        # Commander program factory
+├── commands/                       # Command handlers
+│   ├── speak-command.ts           # Synthesize and play/save audio
+│   ├── setup-command.ts           # Download binary and models
+│   ├── voices-command.ts          # List installed voices
+│   └── config-command.ts          # Manage configuration
+└── utils/                         # Utility modules
+    ├── cli-output.ts              # Unified output formatting
+    ├── input-reader.ts            # stdin/file/argument input
+    ├── audio-player.ts            # Platform-aware audio playback
+    └── config-manager.ts          # JSON config CRUD
+```
+
+**Public API:**
+- `createCliProgram()` - Create Commander.js program with all commands
+- **Commands**: speak, setup, voices, config
+- **Features**: Multiple input modes (text/file/stdin), audio playback, config management, progress callbacks
+
+**Key Implementation Details:**
+- Platform-aware audio playback (afplay on macOS, paplay/aplay/ffplay on Linux, PowerShell on Windows)
+- Configuration stored at `~/.config/tts-local/config.json` (XDG-compliant)
+- 18 CLI-specific error codes with user-friendly messages
+- File path sanitization and stdin size limits for security
+- Graceful cleanup on Ctrl+C with SIGINT handlers
 
 ### @tts-local/electron
 
@@ -141,9 +170,12 @@ TTSError          // Custom error class
 ### Production Dependencies
 | Package | Version | Purpose | Used By |
 |---------|---------|---------|---------|
-| execa | 9.6.1 | Process spawning | @tts-local/core |
-| fs-extra | 11.3.3 | File operations | @tts-local/core |
+| execa | 9.6.1 | Process spawning | @tts-local/core, @tts-local/cli |
+| fs-extra | 11.3.3 | File operations | @tts-local/core, @tts-local/cli |
 | tar | 7.5.7 | Archive extraction | @tts-local/core |
+| commander | 11.1.0 | CLI framework | @tts-local/cli |
+| chalk | 5.3.0 | Terminal colors | @tts-local/cli |
+| ora | 8.0.0 | Progress spinners | @tts-local/cli |
 
 ### Development Dependencies
 | Package | Version | Purpose |
@@ -185,9 +217,11 @@ pnpm test          # Run tests
 |-------|--------|---------|
 | Phase 01 | ✅ Complete | Monorepo setup, tooling, workspace config |
 | Phase 02 | ✅ Complete | Piper TTS core implementation |
-| Phase 03 | ⏳ Pending | CLI application |
+| Phase 03 | ✅ Complete | CLI application with 4 commands and utilities |
 | Phase 04 | ⏳ Pending | Electron desktop app |
 | Phase 05 | ⏳ Pending | Testing and documentation |
+
+**Cumulative Progress**: ~48 hours of 136 total hours = 35% complete
 
 ---
 
@@ -235,13 +269,7 @@ Parsed as:
 
 ## Next Steps
 
-1. **Phase 03**: Implement CLI application
-   - Commander.js integration
-   - Interactive prompts with Inquirer
-   - Audio playback with play-sound
-   - Configuration management
-
-2. **Phase 04**: Implement Electron desktop app
+1. **Phase 04**: Implement Electron desktop app
    - Main process setup
    - Renderer (React UI)
    - IPC bridge via preload script
