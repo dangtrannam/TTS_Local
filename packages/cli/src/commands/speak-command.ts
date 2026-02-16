@@ -24,6 +24,7 @@ interface SpeakOptions {
   output?: string;
   voice?: string;
   speed?: string;
+  timeout?: string;
 }
 
 /**
@@ -37,6 +38,7 @@ export function registerSpeakCommand(program: Command): void {
     .option('-o, --output <path>', 'Save audio to file instead of playing')
     .option('-v, --voice <name>', 'Voice model name')
     .option('-s, --speed <rate>', 'Speech rate (0.5-2.0)', '1.0')
+    .option('-t, --timeout <ms>', 'Synthesis timeout in milliseconds (default: 30000)', '30000')
     .action(async (text: string | undefined, options: SpeakOptions) => {
       try {
         await handleSpeakCommand(text, options);
@@ -64,6 +66,12 @@ async function handleSpeakCommand(
   const speed = parseFloat(options.speed || '1.0');
   if (isNaN(speed) || speed < 0.5 || speed > 2.0) {
     throw new TTSError(TTSErrorCode.INVALID_INPUT, 'Speed must be a number between 0.5 and 2.0');
+  }
+
+  // Parse and validate timeout
+  const timeout = parseInt(options.timeout || '30000', 10);
+  if (isNaN(timeout) || timeout < 1000) {
+    throw new TTSError(TTSErrorCode.INVALID_INPUT, 'Timeout must be at least 1000ms (1 second)');
   }
 
   // Load config for defaults
@@ -100,7 +108,7 @@ async function handleSpeakCommand(
 
   try {
     const startTime = Date.now();
-    const result = await service.synthesize(text, { voice, speed });
+    const result = await service.synthesize(text, { voice, speed, timeout });
     const synthTime = Date.now() - startTime;
 
     synthSpinner.succeed(
