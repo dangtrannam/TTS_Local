@@ -27,11 +27,21 @@ describe('platform-paths', () => {
 
       const paths = getAppPaths();
 
-      expect(paths.appData).toBe('/Users/testuser/Library/Application Support/tts-local');
-      expect(paths.bin).toBe('/Users/testuser/Library/Application Support/tts-local/bin');
-      expect(paths.models).toBe('/Users/testuser/Library/Application Support/tts-local/models');
-      expect(paths.cache).toBe('/Users/testuser/Library/Application Support/tts-local/cache');
-      expect(paths.config).toBe('/Users/testuser/Library/Application Support/tts-local/config');
+      expect(paths.appData).toBe(
+        path.join('/Users/testuser', 'Library', 'Application Support', 'tts-local'),
+      );
+      expect(paths.bin).toBe(
+        path.join('/Users/testuser', 'Library', 'Application Support', 'tts-local', 'bin'),
+      );
+      expect(paths.models).toBe(
+        path.join('/Users/testuser', 'Library', 'Application Support', 'tts-local', 'models'),
+      );
+      expect(paths.cache).toBe(
+        path.join('/Users/testuser', 'Library', 'Application Support', 'tts-local', 'cache'),
+      );
+      expect(paths.config).toBe(
+        path.join('/Users/testuser', 'Library', 'Application Support', 'tts-local', 'config'),
+      );
     });
   });
 
@@ -62,11 +72,17 @@ describe('platform-paths', () => {
 
       const paths = getAppPaths();
 
-      expect(paths.appData).toBe('/home/testuser/.local/share/tts-local');
-      expect(paths.bin).toBe('/home/testuser/.local/share/tts-local/bin');
-      expect(paths.models).toBe('/home/testuser/.local/share/tts-local/models');
-      expect(paths.cache).toBe('/home/testuser/.local/share/tts-local/cache');
-      expect(paths.config).toBe('/home/testuser/.local/share/tts-local/config');
+      expect(paths.appData).toBe(path.join('/home/testuser', '.local', 'share', 'tts-local'));
+      expect(paths.bin).toBe(path.join('/home/testuser', '.local', 'share', 'tts-local', 'bin'));
+      expect(paths.models).toBe(
+        path.join('/home/testuser', '.local', 'share', 'tts-local', 'models'),
+      );
+      expect(paths.cache).toBe(
+        path.join('/home/testuser', '.local', 'share', 'tts-local', 'cache'),
+      );
+      expect(paths.config).toBe(
+        path.join('/home/testuser', '.local', 'share', 'tts-local', 'config'),
+      );
     });
   });
 
@@ -77,7 +93,7 @@ describe('platform-paths', () => {
 
       const paths = getAppPaths();
 
-      expect(paths.appData).toBe('/custom/home/path/.local/share/tts-local');
+      expect(paths.appData).toBe(path.join('/custom/home/path', '.local', 'share', 'tts-local'));
     });
 
     it('generates paths for unsupported platform with fallback', () => {

@@ -31,7 +31,7 @@ describe('piper-binary-manager', () => {
     it('returns macOS Python user bin path on macOS', () => {
       const path = manager.getBinaryPath();
       // Should default to macOS Python 3.12 path
-      expect(path).toContain('Library/Python');
+      expect(path).toMatch(/Library[/\\]Python/);
     });
   });
 

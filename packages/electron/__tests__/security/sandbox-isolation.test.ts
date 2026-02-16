@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { _electron as electron, ElectronApplication, Page } from 'playwright';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let electronApp: ElectronApplication;
 let window: Page;
