@@ -1,5 +1,4 @@
 import { app, Tray, Menu, type BrowserWindow, nativeImage } from 'electron';
-import path from 'node:path';
 
 let tray: Tray | null = null;
 

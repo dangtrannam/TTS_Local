@@ -1,10 +1,12 @@
-import type { Session } from 'electron';
+import { app, type Session } from 'electron';
+
+const isDev = !app.isPackaged;
 
 /**
- * Content Security Policy - STRICT
+ * Content Security Policy - STRICT (production)
  * Prevents XSS, inline scripts, and external resource loading
  */
-export const CSP_HEADER = [
+export const CSP_HEADER_PRODUCTION = [
   "default-src 'none'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'", // Required for React inline styles
@@ -17,6 +19,26 @@ export const CSP_HEADER = [
   "form-action 'none'",
   "frame-ancestors 'none'",
 ].join('; ');
+
+/**
+ * Content Security Policy - RELAXED (development only)
+ * Allows Vite HMR, React Fast Refresh (inline scripts), and dev server WebSockets
+ */
+export const CSP_HEADER_DEV = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Required for Vite + React Fast Refresh
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'self' ws: wss: http://localhost:* https://localhost:*", // Vite HMR WebSocket
+  "media-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+].join('; ');
+
+const CSP_HEADER = isDev ? CSP_HEADER_DEV : CSP_HEADER_PRODUCTION;
 
 /**
  * Configure Content Security Policy headers for the session
@@ -56,13 +78,9 @@ export function configurePermissions(session: Session): void {
  * Register secure protocol handlers and block dangerous protocols
  */
 export function registerSecureProtocols(): void {
-  // Block dangerous protocols in navigation
+  // Block dangerous protocols in navigation (examples: 'javascript:', 'data:', 'blob:', 'vbscript:', 'file://')
   // Note: Navigation blocking is also handled in main process via will-navigate event
   // This provides additional defense-in-depth
-
-  const dangerousProtocols = ['javascript:', 'data:', 'blob:', 'vbscript:', 'file://'];
-
-  // This is handled via will-navigate event in main process for defense-in-depth
-  // We explicitly block all navigation there, so dangerous protocols can't execute
-  // Additional protocol-level blocking could be added here if needed for future features
+  // Protocol list removed — navigation blocking is handled in the main process via will-navigate.
+  // Additional protocol-level blocking could be added here in future if needed.
 }

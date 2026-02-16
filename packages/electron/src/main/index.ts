@@ -41,7 +41,7 @@ function createWindow(): void {
       allowRunningInsecureContent: false, // Block mixed content
       experimentalFeatures: false, // Disable experimental features
       // Preload script (only safe API exposed via contextBridge)
-      preload: path.join(__dirname, '../preload/index.js'),
+      preload: path.join(__dirname, '../preload/index.cjs'),
     },
   });
 
