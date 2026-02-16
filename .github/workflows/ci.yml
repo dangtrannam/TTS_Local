@@ -54,8 +54,6 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Install Electron binary
-        run: node node_modules/electron/install.js
       - run: pnpm --filter @tts-local/electron build
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
@@ -78,8 +76,6 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Install Electron binary
-        run: node node_modules/electron/install.js
       - run: pnpm --filter @tts-local/electron build
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
