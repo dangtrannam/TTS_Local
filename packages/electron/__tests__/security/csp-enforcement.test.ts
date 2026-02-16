@@ -6,12 +6,15 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const mainPath = path.join(__dirname, '../../dist/main/index.js');
+const launchArgs = process.env.ELECTRON_DISABLE_SANDBOX ? [mainPath, '--no-sandbox'] : [mainPath];
+
 let electronApp: ElectronApplication;
 let window: Page;
 
 test.beforeAll(async () => {
   electronApp = await electron.launch({
-    args: [path.join(__dirname, '../../dist/main/index.js')],
+    args: launchArgs,
   });
   window = await electronApp.firstWindow();
 });

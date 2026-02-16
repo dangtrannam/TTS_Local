@@ -55,13 +55,15 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Install Electron binary
-        run: npx electron install
+        run: node node_modules/electron/install.js
       - run: pnpm --filter @tts-local/electron build
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests (Linux with xvfb)
         if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum pnpm --filter @tts-local/electron test:e2e
+        env:
+          ELECTRON_DISABLE_SANDBOX: 1
       - name: Run E2E tests (macOS/Windows)
         if: runner.os != 'Linux'
         run: pnpm --filter @tts-local/electron test:e2e
@@ -77,9 +79,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Install Electron binary
-        run: npx electron install
+        run: node node_modules/electron/install.js
       - run: pnpm --filter @tts-local/electron build
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
       - name: Run security audit tests
         run: xvfb-run --auto-servernum pnpm --filter @tts-local/electron test:security
+        env:
+          ELECTRON_DISABLE_SANDBOX: 1
