@@ -6,9 +6,14 @@ import path from 'node:path';
 describe('platform-paths', () => {
   const originalPlatform = process.platform;
   const originalHomeDir = os.homedir;
+  const originalAppData = process.env.APPDATA;
+  const originalXdgDataHome = process.env.XDG_DATA_HOME;
 
   beforeEach(() => {
     vi.resetAllMocks();
+    // Clear env vars that bypass os.homedir() in getBaseDir()
+    delete process.env.APPDATA;
+    delete process.env.XDG_DATA_HOME;
   });
 
   afterEach(() => {
@@ -18,6 +23,11 @@ describe('platform-paths', () => {
       configurable: true,
     });
     vi.spyOn(os, 'homedir').mockRestore();
+    // Restore env vars
+    if (originalAppData !== undefined) process.env.APPDATA = originalAppData;
+    else delete process.env.APPDATA;
+    if (originalXdgDataHome !== undefined) process.env.XDG_DATA_HOME = originalXdgDataHome;
+    else delete process.env.XDG_DATA_HOME;
   });
 
   describe('macOS paths', () => {
@@ -52,8 +62,7 @@ describe('platform-paths', () => {
 
       const paths = getAppPaths();
 
-      // path.join uses platform-specific separators, but since we're running on non-Windows,
-      // it will use forward slashes. We just check the path contains the expected components.
+      // Verify paths contain expected components (path.join uses OS-specific separators)
       expect(paths.appData).toContain('testuser');
       expect(paths.appData).toContain('AppData');
       expect(paths.appData).toContain('Roaming');
