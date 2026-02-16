@@ -8,3 +8,5 @@ export type {
 } from './tts-types.js';
 
 export { TTSErrorCode, TTSError } from './error-types.js';
+
+export type { VoiceInfo, SetupResult, ElectronTTSAPI } from './electron-api.js';

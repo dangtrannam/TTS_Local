@@ -1,8 +1,8 @@
 # System Architecture
 
 **Project**: TTS_Local
-**Last Updated**: 2026-02-15
-**Phase**: Phase 03 Complete (CLI Application)
+**Last Updated**: 2026-02-16
+**Phase**: Phase 04 Complete (Electron Desktop Application)
 
 ---
 
@@ -18,8 +18,8 @@ TTS_Local uses a layered architecture with clear separation between services, ut
 ┌─────────────────────────────────────────────────────────────┐
 │                    Application Layer                         │
 │  ┌──────────────────────┐        ┌───────────────────────┐  │
-│  │   CLI Application    │        │ Electron GUI (Phase 4)│  │
-│  │  (4 Commands)        │        │                       │  │
+│  │   CLI Application    │        │  Electron Desktop     │  │
+│  │  (4 Commands)        │        │  (React + IPC)        │  │
 │  └──────────────────────┘        └───────────────────────┘  │
 └────────────────────────┬────────────────────────────────────┘
                          │
@@ -649,15 +649,89 @@ Each downloaded resource has a `.version` file containing the version string. Th
 
 ---
 
-## Future Architecture Changes
+## Electron Package Architecture (@tts-local/electron)
 
-### Phase 04 (Electron)
-- Wrap CLI logic in Electron main process
-- React-based renderer UI
-- Add React renderer
-- Add IPC bridge (main ↔ renderer)
-- Add Web Audio API integration
-- Add update mechanism (electron-updater)
+### Process Model
+
+```
+┌───────────────────────────────────────────────────────────┐
+│                  Main Process (Node.js)                    │
+│  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐ │
+│  │ index.ts     │  │ ipc-handlers │  │ security-config  │ │
+│  │ (app/window) │  │ (TTS bridge) │  │ (CSP/perms)      │ │
+│  └──────────────┘  └──────┬───────┘  └─────────────────┘ │
+│                            │                               │
+│  ┌──────────────┐  ┌───────▼──────┐                       │
+│  │ tray-manager │  │ ipc-validator│                       │
+│  └──────────────┘  └──────────────┘                       │
+└───────────────────────────┬───────────────────────────────┘
+                             │  contextBridge (whitelisted)
+┌───────────────────────────▼───────────────────────────────┐
+│                  Preload Script (isolated)                  │
+│  window.ttsAPI = { synthesize, isReady, setup,            │
+│                    listVoices, getConfig, setConfig,       │
+│                    onProgress, onSetupProgress }           │
+└───────────────────────────┬───────────────────────────────┘
+                             │  window.ttsAPI (safe API only)
+┌───────────────────────────▼───────────────────────────────┐
+│              Renderer Process (React, sandboxed)           │
+│  App.tsx → useTTS / useAudioPlayer                        │
+│  Components: StatusIndicator | TextInputPanel |            │
+│              PlaybackControls | SettingsPanel | SetupWizard│
+└───────────────────────────────────────────────────────────┘
+```
+
+### Security Model
+
+| Layer | Control | Value |
+|-------|---------|-------|
+| BrowserWindow | `nodeIntegration` | `false` |
+| BrowserWindow | `contextIsolation` | `true` |
+| BrowserWindow | `sandbox` | `true` |
+| Session | CSP | `default-src 'none'; script-src 'self'` |
+| Session | Permissions | All denied |
+| preload | IPC channels | Whitelisted allowlist |
+| ipc-validator | Input | Schema-validated per channel |
+| preload | Data | `structuredClone()` on all IPC data |
+
+### IPC Channels
+
+**Renderer → Main (invoke):**
+
+| Channel | Handler | Validation |
+|---------|---------|------------|
+| `tts:synthesize` | Calls `PiperTTSService.synthesize()` | text type, length, null bytes; speed/voice schema |
+| `tts:is-ready` | Calls `ttsService.isReady()` | None |
+| `tts:setup` | Calls `ttsService.ensureReady()` | None |
+| `tts:list-voices` | Calls `voiceManager.listInstalledModels()` | None |
+| `tts:get-config` | Calls `ttsService.getConfig()` | None |
+| `tts:set-config` | Config update (allowedKeys: defaultVoice, speed) | Key/value schema |
+
+**Main → Renderer (send):**
+- `tts:progress` - Synthesis progress
+- `tts:setup-progress` - Download progress
+
+### Package Structure
+
+```
+packages/electron/src/
+├── main/
+│   ├── index.ts              # App lifecycle, window creation
+│   ├── ipc-handlers.ts       # IPC handler registration
+│   ├── ipc-validator.ts      # Runtime schema validation
+│   ├── security-config.ts    # CSP headers, permissions
+│   └── tray-manager.ts       # System tray icon
+├── preload/
+│   └── index.ts              # contextBridge API exposure
+└── renderer/
+    ├── index.tsx, App.tsx    # React entry point and root
+    ├── components/           # 5 UI components
+    └── hooks/                # use-tts.ts, use-audio-player.ts
+```
+
+---
+
+## Future Architecture Changes
 
 ### Phase 05 (Optimization)
 - Add binary caching layer
@@ -668,5 +742,5 @@ Each downloaded resource has a `.version` file containing the version string. Th
 ---
 
 **Diagram Generation**: ASCII art created manually
-**Last Reviewed**: 2026-02-15
-**Next Review**: After Phase 04 Electron implementation
+**Last Reviewed**: 2026-02-16
+**Next Review**: After Phase 05 Testing and Finalization

@@ -117,6 +117,18 @@ export class PiperTTSService {
     return { ...this.config };
   }
 
+  /** Update configuration (in-memory only for now) */
+  setConfig(key: keyof PiperConfig, value: unknown): void {
+    if (key === 'defaultVoice') {
+      this.config.defaultVoice = value as string;
+    } else if (key === 'defaultSpeed') {
+      this.config.defaultSpeed = value as number;
+    } else if (key === 'synthesisTimeout') {
+      this.config.synthesisTimeout = value as number;
+    }
+    // Note: binaryPath and modelsDir cannot be changed at runtime
+  }
+
   private validateText(text: string): void {
     if (!text || text.trim().length === 0) {
       throw new TTSError(TTSErrorCode.EMPTY_TEXT, 'Text input is empty');

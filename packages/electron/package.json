@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "dist/main/index.js",
   "scripts": {
-    "dev": "echo 'electron dev - configured in Phase 04'",
-    "build": "tsc --build",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -13,6 +15,13 @@
     "@tts-local/types": "workspace:*"
   },
   "devDependencies": {
+    "@types/react": "^18.3.16",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.4.2",
+    "electron": "^35.2.0",
+    "electron-vite": "^2.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "typescript": "^5.4.0"
   }
 }
