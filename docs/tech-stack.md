@@ -109,9 +109,21 @@ tts-local/
 - **lint-staged**: Pre-commit linting
 
 ### Testing
-- **Vitest**: Unit and integration testing
-- **Playwright**: E2E testing for Electron app
+- **Vitest**: Unit and integration testing (242 tests, V8 coverage provider)
+- **Playwright**: E2E testing for Electron app (cross-platform, xvfb on Linux)
 - **@testing-library/react**: React component testing
+
+**Test Commands:**
+```bash
+pnpm test              # Run all unit/integration tests
+pnpm test:coverage     # Run with V8 coverage report
+pnpm test:watch        # Watch mode
+pnpm test:ui           # Vitest UI
+pnpm --filter @tts-local/electron test:e2e       # Electron E2E (Playwright)
+pnpm --filter @tts-local/electron test:security  # Security audit tests
+```
+
+**CI Matrix**: ubuntu-latest, macos-latest, windows-latest (GitHub Actions)
 
 ### Type Checking
 - **TypeScript**: Strict mode enabled
@@ -182,5 +194,5 @@ All dependencies use permissive licenses (MIT, Apache 2.0, ISC) compatible with 
 
 ---
 
-**Last Updated**: 2026-02-15
-**Status**: Phase 02 Complete (Core TTS Implemented)
+**Last Updated**: 2026-02-16
+**Status**: Phase 05 Complete (Testing & QA)

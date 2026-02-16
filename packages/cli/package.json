@@ -9,7 +9,10 @@
   "scripts": {
     "dev": "tsx watch src/bin.ts",
     "build": "tsc --build && node scripts/make-executable.js",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@tts-local/core": "workspace:*",
