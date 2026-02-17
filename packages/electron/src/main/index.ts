@@ -55,18 +55,19 @@ function createWindow(): void {
     return { action: 'deny' };
   });
 
-  // Disable DevTools in production
-  if (!app.isPackaged) {
+  // Open DevTools only in development with dev server running
+  if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
     mainWindow.webContents.openDevTools();
   }
 
   // Load renderer HTML
-  if (app.isPackaged) {
-    // Production: load from file
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+  // Use ELECTRON_RENDERER_URL if set (electron-vite dev mode),
+  // otherwise load from built files (production/testing/CI)
+  const devServerUrl = process.env.ELECTRON_RENDERER_URL;
+  if (!app.isPackaged && devServerUrl) {
+    mainWindow.loadURL(devServerUrl);
   } else {
-    // Development: load from vite dev server
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
   // Register IPC handlers
