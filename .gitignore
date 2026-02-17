@@ -36,3 +36,7 @@ release/
 # Plans (local only)
 plans/
 repomix-output.xml
+# Electron packaging - bundled binaries (downloaded at build time)
+packages/electron/resources/piper/
+packages/electron/release/
+

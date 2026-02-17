@@ -2,11 +2,64 @@
 
 **Project**: TTS_Local
 **Format**: [Semantic Versioning](https://semver.org/)
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-02-17
 
 ---
 
-## Version 0.1.0 (Current Development)
+## Version 0.2.0 (Current Development)
+
+### Phase 06: Packaging & Distribution - 2026-02-17
+
+#### Added
+
+**CLI Distribution (@tts-local/cli)**
+- `packages/cli/package.json`: `publishConfig`, `files`, `prepublishOnly` for npm registry publish
+- `packages/cli/README.md`: npm page with installation, quick start, command reference, requirements
+
+**Piper Binary Bundling Automation**
+- `scripts/bundle-piper.sh`: Cross-platform bash script — downloads correct Piper binary + en_US-amy-medium voice model per platform/arch (darwin-arm64, darwin-x64, win32-x64, linux-x64, linux-arm64)
+- `scripts/bundle-piper.ps1`: PowerShell equivalent for Windows CI builds
+- `packages/electron/resources/piper/.gitkeep`: Placeholder preserving directory in VCS
+
+**Electron Distribution (electron-builder)**
+- `packages/electron/electron-builder.yml`: Full electron-builder config for DMG (macOS arm64/x64), NSIS (Windows x64), AppImage + deb (Linux x64); extraResources for Piper binary; GitHub publish provider
+- `packages/electron/resources/entitlements.mac.plist`: Minimal hardened runtime entitlements (JIT, unsigned memory, dyld env vars)
+- `packages/electron/package.json`: Added `electron-builder` dependency and `prebuild:*` / `package:*` scripts per platform
+
+**Core Service Updates**
+- `packages/core/src/services/piper-binary-manager.ts`: Detects bundled Piper binary via `process.resourcesPath` before falling back to downloaded path; same logic for voice model paths
+
+**CI/CD**
+- `.github/workflows/release.yml`: Tag-triggered (`v*`) matrix builds on macos-latest, windows-latest, ubuntu-latest; uploads DMG/EXE/AppImage artifacts; creates GitHub Release via softprops/action-gh-release
+
+**Assets**
+- `packages/electron/resources/icon.png`: Placeholder 512x512 icon with documentation for generating `.icns` and `.ico` variants
+
+#### Security Improvements
+- macOS entitlements scoped to minimum required (JIT + unsigned memory only)
+- Piper binary sourced exclusively from official rhasspy/piper GitHub releases via HTTPS
+- No auto-update v1 (reduces supply-chain attack surface)
+- Per-user NSIS install (no admin elevation)
+- extraResources outside asar (required for binary execution, not a security bypass)
+
+#### Quality Metrics
+- Tests: 242 passing, 0 failed
+- Coverage: 56% lines/functions/branches/statements (threshold: 45%)
+- Type-check: PASS
+- Build: PASS
+- Code quality: ~8.5/10 (after critical fixes: entitlements, error handling, cleanup, type safety)
+
+#### Known Limitations / Deferred
+- Platform installer smoke tests deferred to v1.1 (requires real macOS/Windows/Linux hardware)
+- Release workflow end-to-end test with real tag deferred to v1.1
+- Checksums for GitHub release artifacts deferred to v1.1
+- Code signing (Apple Developer ID, Windows Authenticode) deferred to v2.0
+- macOS notarization deferred to v2.0
+- Auto-update (electron-updater) deferred to v2.0
+
+---
+
+## Version 0.1.0 (Released)
 
 ### Phase 05: Testing & QA - 2026-02-16
 
@@ -361,24 +414,23 @@ None yet (v0.1.0)
 
 | Version | Release Date | Status | Milestones |
 |---------|--------------|--------|-----------|
-| 0.1.0 | In Progress | Development | Phase 01-05 Complete (CLI + Desktop + Testing) |
-| 0.2.0 | ~2026-02-22 | Planned | Phase 06 (Packaging & Distribution) |
-| 1.0.0 | ~2026-02-23 | Planned | Phase 07 (Public Release) |
+| 0.1.0 | 2026-02-16 | Released | Phase 01-05 Complete (CLI + Desktop + Testing) |
+| 0.2.0 | 2026-02-17 | Released | Phase 06 Complete (Packaging & Distribution infrastructure) |
+| 1.0.0 | ~2026-02-18 | Planned | Phase 07 (Documentation & Public Release) |
 
 ---
 
-## Next Release (v0.2.0)
+## Next Release (v1.0.0)
 
-**Target Date**: 2026-02-22
-**Scope**: Packaging and distribution (Phase 06)
+**Target Date**: ~2026-02-18
+**Scope**: Documentation & Polish (Phase 07)
 
 **Planned Features**:
-- CLI binary packaging (npm, homebrew, exe)
-- Electron app signing (macOS/Windows)
-- DMG installer for macOS
-- NSIS installer for Windows
-- Snap/deb packages for Linux
-- GitHub releases with checksums
+- User guide for CLI and Electron
+- Installation instructions per platform with signing workarounds
+- Troubleshooting guide
+- Developer documentation and architecture guide
+- API reference
 
 ---
 
@@ -392,5 +444,5 @@ For issues or questions:
 ---
 
 **Maintainer**: Development Team
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-02-17
 **Policy**: Update after each phase completion

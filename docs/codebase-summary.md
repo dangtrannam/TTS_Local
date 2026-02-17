@@ -1,9 +1,9 @@
 # Codebase Summary
 
 **Project**: TTS_Local - Cross-platform Text-to-Speech Application
-**Version**: 0.1.0
-**Last Updated**: 2026-02-16
-**Status**: Phase 05 Complete (Testing & QA — 242 tests passing)
+**Version**: 0.2.0
+**Last Updated**: 2026-02-17
+**Status**: Phase 06 Complete (Packaging & Distribution)
 
 ---
 
@@ -29,9 +29,10 @@ TTS_Local/
 │   ├── types/          # Shared TypeScript types (Phase 02 ✅)
 │   ├── cli/            # CLI application (Phase 03 ✅)
 │   └── electron/       # Electron desktop GUI (Phase 04 ✅)
+├── scripts/            # Piper binary bundling scripts (Phase 06 ✅)
 ├── docs/               # Project documentation
 ├── plans/              # Development plans and reports
-└── .github/workflows/  # CI/CD configuration
+└── .github/workflows/  # CI/CD + release workflows
 ```
 
 ---
@@ -56,7 +57,8 @@ packages/core/src/
 │   ├── platform-paths.ts          # XDG-compliant paths
 │   ├── download-helper.ts         # HTTP download/extraction
 │   ├── audio-utils.ts             # WAV parsing
-│   └── error-handler.ts           # Error formatting
+│   ├── error-handler.ts           # Error formatting
+│   └── electron-helper.ts         # Packaged Electron resource path detection
 ├── config/
 │   └── default-config.ts          # Constants and defaults
 └── index.ts                       # Public API exports
@@ -64,9 +66,9 @@ packages/core/src/
 
 **Public API:**
 - `PiperTTSService` - Main TTS service class
-- `PiperBinaryManager` - Binary lifecycle management
-- `PiperVoiceManager` - Voice model lifecycle management
-- Utility functions: `getAppPaths()`, `detectPlatform()`, `formatErrorForUser()`
+- `PiperBinaryManager` - Binary lifecycle management (Phase 06: checks bundled binary first)
+- `PiperVoiceManager` - Voice model lifecycle management (Phase 06: checks bundled models first)
+- Utility functions: `getAppPaths()`, `detectPlatform()`, `formatErrorForUser()`, `getElectronResourcesPath()`, `isPackagedElectronApp()`
 
 **Key Implementation Details:**
 - Singleton pattern for services
@@ -273,8 +275,9 @@ pnpm --filter @tts-local/electron test:security  # Security audit
 | Phase 03 | ✅ Complete | CLI application with 4 commands and utilities |
 | Phase 04 | ✅ Complete | Electron desktop app with React UI and security hardening |
 | Phase 05 | ✅ Complete | 242 tests (Vitest + Playwright), 3-OS CI matrix, security audit |
+| Phase 06 | ✅ Complete | CLI npm dist, electron-builder DMG/NSIS/AppImage, release CI, binary bundling |
 
-**Cumulative Progress**: ~100 hours of 136 total hours = 74% complete
+**Cumulative Progress**: ~124 hours of 136 total hours = 88% complete
 
 ---
 
@@ -322,12 +325,14 @@ Parsed as:
 
 ## Next Steps
 
-1. **Phase 06**: Packaging and distribution
-   - CLI binary packaging (npm, homebrew, exe)
-   - Electron app signing (macOS/Windows)
-   - DMG installer (macOS), NSIS installer (Windows), Snap/deb (Linux)
-   - GitHub releases with checksums
-   - Auto-update mechanism (electron-updater)
+1. **Phase 07**: Documentation & Polish
+   - User guide for CLI and Electron
+   - Installation instructions per platform
+   - Troubleshooting guide
+   - API reference and architecture guide
+
+**Deferred to v1.1**: Platform installer smoke tests, release checksums
+**Deferred to v2.0**: Code signing (Apple Developer ID, Windows Authenticode), macOS notarization, auto-update
 
 ---
 
@@ -359,10 +364,23 @@ Parsed as:
 | `packages/electron/src/renderer/hooks/use-tts.ts` | TTS state machine |
 | `packages/electron/src/renderer/hooks/use-audio-player.ts` | Web Audio API playback |
 
+## Key Files Reference (Phase 06 Packaging)
+
+| File | Purpose |
+|------|---------|
+| `packages/core/src/utils/electron-helper.ts` | `getElectronResourcesPath()` / `isPackagedElectronApp()` |
+| `packages/electron/electron-builder.yml` | electron-builder config (DMG/NSIS/AppImage) |
+| `packages/electron/resources/entitlements.mac.plist` | macOS hardened runtime entitlements |
+| `scripts/bundle-piper.sh` | Download + bundle Piper binary + voice (Unix) |
+| `scripts/bundle-piper.ps1` | Download + bundle Piper binary + voice (Windows) |
+| `.github/workflows/release.yml` | Tag-triggered release CI (3 platform matrix) |
+| `packages/cli/README.md` | npm package documentation |
+
 ---
 
 **Generation Notes:**
-- Updated 2026-02-16 for Phase 05 (Testing & QA) completion
+- Updated 2026-02-17 for Phase 06 (Packaging & Distribution) completion
 - Total packages: 4 (core, types, cli, electron)
 - Tests: 242 total (unit + integration + security), 100% passing
-- CI: 3-OS matrix with Playwright E2E and security audit jobs
+- CI: 3-OS matrix (ci.yml) + tag-triggered release matrix (release.yml)
+- New Phase 06 files: `electron-helper.ts`, `electron-builder.yml`, `bundle-piper.sh`, `bundle-piper.ps1`, `.github/workflows/release.yml`, `packages/cli/README.md`

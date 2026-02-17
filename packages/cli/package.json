@@ -1,10 +1,16 @@
 {
   "name": "@tts-local/cli",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "bin": {
     "tts": "./dist/bin.js"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "dev": "tsx watch src/bin.ts",
@@ -12,7 +18,8 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@tts-local/core": "workspace:*",

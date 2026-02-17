@@ -11,7 +11,15 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:security": "vitest run --config vitest.config.ts __tests__/security"
+    "test:security": "vitest run --config vitest.config.ts __tests__/security",
+    "prebuild:mac": "bash ../../scripts/bundle-piper.sh darwin arm64",
+    "prebuild:mac-x64": "bash ../../scripts/bundle-piper.sh darwin x64",
+    "prebuild:win": "bash ../../scripts/bundle-piper.sh win32 x64",
+    "prebuild:linux": "bash ../../scripts/bundle-piper.sh linux x64",
+    "package:mac": "pnpm prebuild:mac && pnpm build && electron-builder --mac --arm64 --config electron-builder.yml",
+    "package:mac-x64": "pnpm prebuild:mac-x64 && pnpm build && electron-builder --mac --x64 --config electron-builder.yml",
+    "package:win": "pnpm prebuild:win && pnpm build && electron-builder --win --config electron-builder.yml",
+    "package:linux": "pnpm prebuild:linux && pnpm build && electron-builder --linux --config electron-builder.yml"
   },
   "dependencies": {
     "@tts-local/core": "workspace:*",
@@ -22,6 +30,7 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.4.2",
     "electron": "^35.2.0",
+    "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
