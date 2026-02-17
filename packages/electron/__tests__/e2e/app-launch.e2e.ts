@@ -13,9 +13,10 @@ let electronApp: ElectronApplication;
 let window: Page;
 
 test.beforeAll(async () => {
-  // Launch Electron app
+  // Launch Electron app (increased timeout for macOS CI)
   electronApp = await electron.launch({
     args: launchArgs,
+    timeout: 60000,
   });
 
   // Wait for the first window

@@ -15,6 +15,7 @@ let window: Page;
 test.beforeAll(async () => {
   electronApp = await electron.launch({
     args: launchArgs,
+    timeout: 60000,
   });
   window = await electronApp.firstWindow();
 });
