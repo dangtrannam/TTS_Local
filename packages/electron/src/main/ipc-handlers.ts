@@ -4,10 +4,24 @@ import type { VoiceInfo } from '@tts-local/types';
 import { validateIPC } from './ipc-validator.js';
 import { promises as fs } from 'node:fs';
 
-// Global TTS service instance
-const ttsService = new PiperTTSService();
-const paths = getAppPaths();
-const voiceManager = new PiperVoiceManager(paths.models);
+// Lazy-initialized TTS service instances (avoid module-level side effects)
+let ttsService: PiperTTSService | null = null;
+let voiceManager: PiperVoiceManager | null = null;
+
+function getTTSService(): PiperTTSService {
+  if (!ttsService) {
+    ttsService = new PiperTTSService();
+  }
+  return ttsService;
+}
+
+function getVoiceManager(): PiperVoiceManager {
+  if (!voiceManager) {
+    const paths = getAppPaths();
+    voiceManager = new PiperVoiceManager(paths.models);
+  }
+  return voiceManager;
+}
 
 /**
  * Register all IPC handlers for TTS operations
@@ -22,7 +36,7 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
     async (_event, text: string, options?: Record<string, unknown>) => {
       validateIPC('tts:synthesize', [text, options]);
 
-      const result = await ttsService.synthesize(text, options);
+      const result = await getTTSService().synthesize(text, options);
       // Return ArrayBuffer for efficient IPC transfer
       return result.audio.buffer.slice(
         result.audio.byteOffset,
@@ -35,7 +49,7 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
    * Check if TTS system is ready
    */
   ipcMain.handle('tts:is-ready', () => {
-    return ttsService.isReady();
+    return getTTSService().isReady();
   });
 
   /**
@@ -43,7 +57,7 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
    */
   ipcMain.handle('tts:setup', async () => {
     try {
-      await ttsService.ensureReady((progress) => {
+      await getTTSService().ensureReady((progress) => {
         mainWindow.webContents.send('tts:setup-progress', progress);
       });
       return { success: true, message: 'TTS system ready' };
@@ -59,12 +73,13 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
    * Get list of installed voice models
    */
   ipcMain.handle('tts:list-voices', async () => {
-    const installedModels = await voiceManager.listInstalledModels();
+    const vm = getVoiceManager();
+    const installedModels = await vm.listInstalledModels();
 
     // Convert model names to VoiceInfo objects
     const voices: VoiceInfo[] = await Promise.all(
       installedModels.map(async (name) => {
-        const modelPath = voiceManager.getModelPath(name);
+        const modelPath = vm.getModelPath(name);
         let sizeBytes = 0;
 
         try {
@@ -95,7 +110,7 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
    * Get current configuration
    */
   ipcMain.handle('tts:get-config', () => {
-    return ttsService.getConfig();
+    return getTTSService().getConfig();
   });
 
   /**
@@ -105,7 +120,7 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
     validateIPC('tts:set-config', [key, value]);
 
     // Update in-memory config (persistence can be added later)
-    ttsService.setConfig(key as keyof import('@tts-local/types').PiperConfig, value);
+    getTTSService().setConfig(key as keyof import('@tts-local/types').PiperConfig, value);
   });
 }
 

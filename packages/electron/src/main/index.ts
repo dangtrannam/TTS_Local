@@ -73,8 +73,12 @@ function createWindow(): void {
   // Register IPC handlers
   registerIPCHandlers(mainWindow);
 
-  // Create system tray
-  createTray(mainWindow);
+  // Create system tray (may fail on headless CI environments)
+  try {
+    createTray(mainWindow);
+  } catch (error) {
+    console.warn('Failed to create system tray:', error);
+  }
 
   // Handle window close (minimize to tray instead of quitting)
   mainWindow.on('close', (event) => {
