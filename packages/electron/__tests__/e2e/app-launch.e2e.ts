@@ -62,7 +62,7 @@ test.describe('Electron App Launch', () => {
 
   test('window is not in fullscreen mode initially', async () => {
     const isFullscreen = await electronApp.evaluate(({ BrowserWindow }) => {
-      const win = BrowserWindow.getFocusedWindow();
+      const win = BrowserWindow.getAllWindows()[0];
       return win?.isFullScreen() ?? false;
     });
 
@@ -70,9 +70,12 @@ test.describe('Electron App Launch', () => {
   });
 
   test('window can be focused', async () => {
-    await window.focus();
+    await electronApp.evaluate(({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      win?.focus();
+    });
     const isFocused = await electronApp.evaluate(({ BrowserWindow }) => {
-      const win = BrowserWindow.getFocusedWindow();
+      const win = BrowserWindow.getAllWindows()[0];
       return win?.isFocused() ?? false;
     });
 
@@ -83,7 +86,7 @@ test.describe('Electron App Launch', () => {
 test.describe('App Menu', () => {
   test('app has menu bar', async () => {
     const hasMenu = await electronApp.evaluate(({ BrowserWindow }) => {
-      const win = BrowserWindow.getFocusedWindow();
+      const win = BrowserWindow.getAllWindows()[0];
       return win?.menuBarVisible !== false;
     });
 
