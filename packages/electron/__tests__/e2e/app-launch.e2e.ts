@@ -7,7 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const mainPath = path.join(__dirname, '../../dist/main/index.js');
-const launchArgs = process.env.ELECTRON_DISABLE_SANDBOX ? [mainPath, '--no-sandbox'] : [mainPath];
+const ciArgs = process.env.ELECTRON_DISABLE_SANDBOX
+  ? ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+  : [];
+const launchArgs = [mainPath, ...ciArgs];
 
 let electronApp: ElectronApplication;
 let window: Page;
@@ -20,7 +23,7 @@ test.beforeAll(async () => {
   });
 
   // Wait for the first window
-  window = await electronApp.firstWindow();
+  window = await electronApp.firstWindow({ timeout: 60000 });
 });
 
 test.afterAll(async () => {
