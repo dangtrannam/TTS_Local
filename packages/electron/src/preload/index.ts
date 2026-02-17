@@ -17,7 +17,7 @@ const ttsAPI = {
    * @param options - Optional TTS options (voice, speed, etc.)
    * @returns ArrayBuffer containing WAV audio data
    */
-  synthesize: (text, options) => {
+  synthesize: (text: string, options?: any) => {
     // Sanitize inputs before sending to main process
     const sanitizedText = String(text);
     const sanitizedOptions = options ? structuredClone(options) : undefined;
@@ -57,7 +57,7 @@ const ttsAPI = {
    * @param key - Configuration key (e.g., 'defaultVoice', 'speed')
    * @param value - New value
    */
-  setConfig: (key, value) => {
+  setConfig: (key: string, value: any) => {
     const sanitizedKey = String(key);
     const sanitizedValue = structuredClone(value);
     return ipcRenderer.invoke('tts:set-config', sanitizedKey, sanitizedValue);
@@ -68,8 +68,8 @@ const ttsAPI = {
    * @param callback - Called when progress updates are received
    * @returns Cleanup function to unsubscribe
    */
-  onProgress: (callback) => {
-    const handler = (_event, progress) => {
+  onProgress: (callback: (progress: any) => void) => {
+    const handler = (_event: any, progress: any) => {
       // Clone data to prevent prototype pollution
       callback(structuredClone(progress));
     };
@@ -87,8 +87,8 @@ const ttsAPI = {
    * @param callback - Called when setup progress updates are received
    * @returns Cleanup function to unsubscribe
    */
-  onSetupProgress: (callback) => {
-    const handler = (_event, progress) => {
+  onSetupProgress: (callback: (progress: any) => void) => {
+    const handler = (_event: any, progress: any) => {
       // Clone data to prevent prototype pollution
       callback(structuredClone(progress));
     };

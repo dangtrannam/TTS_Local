@@ -26,7 +26,7 @@ function getBaseDir(): string {
 }
 
 export interface AppPaths {
-  base: string;
+  appData: string;
   bin: string;
   models: string;
   cache: string;
@@ -37,7 +37,7 @@ export interface AppPaths {
 export function getAppPaths(): AppPaths {
   const base = getBaseDir();
   return {
-    base,
+    appData: base,
     bin: path.join(base, 'bin'),
     models: path.join(base, 'models'),
     cache: path.join(base, 'cache'),

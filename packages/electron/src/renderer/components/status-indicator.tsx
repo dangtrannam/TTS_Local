@@ -24,13 +24,16 @@ export function StatusIndicator({ status, error }: StatusIndicatorProps): React.
   const display = getStatusDisplay();
 
   return (
-    <div style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+    <div data-testid="status-bar" style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span style={{ color: display.color, fontSize: '16px' }}>{display.icon}</span>
-        <span style={{ fontWeight: 500, color: '#1f2937' }}>{display.text}</span>
+        <span data-testid="status" style={{ fontWeight: 500, color: '#1f2937' }}>
+          {display.text}
+        </span>
       </div>
       {error && status === 'error' && (
         <div
+          data-testid="error-message"
           style={{
             marginTop: '8px',
             padding: '8px',

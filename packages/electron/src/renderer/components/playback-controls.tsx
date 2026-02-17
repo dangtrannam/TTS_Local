@@ -36,6 +36,7 @@ export function PlaybackControls({
   return (
     <div style={{ padding: '16px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px' }}>
       <button
+        data-testid="speak-button"
         onClick={onPlay}
         disabled={!canPlay || isSynthesizing || isPlaying}
         style={buttonStyle(canPlay && !isSynthesizing && !isPlaying)}
@@ -54,6 +55,7 @@ export function PlaybackControls({
       </button>
 
       <button
+        data-testid="stop-button"
         onClick={onStop}
         disabled={!isPlaying}
         style={stopButtonStyle}

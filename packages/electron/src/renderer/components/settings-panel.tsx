@@ -72,6 +72,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps): React.Re
             Voice Model
           </label>
           <select
+            data-testid="voice-selector"
             value={selectedVoice}
             onChange={(e) => setSelectedVoice(e.target.value)}
             style={{
@@ -98,6 +99,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps): React.Re
             Speech Speed: {speed.toFixed(1)}x
           </label>
           <input
+            data-testid="speed-slider"
             type="range"
             min="0.5"
             max="2.0"

@@ -44,6 +44,7 @@ export function SetupWizard({ isOpen, onComplete }: SetupWizardProps): React.Rea
 
   return (
     <div
+      data-testid="setup-wizard"
       style={{
         position: 'fixed',
         top: 0,
@@ -105,6 +106,7 @@ export function SetupWizard({ isOpen, onComplete }: SetupWizardProps): React.Rea
 
         {error && (
           <div
+            data-testid="setup-error"
             style={{
               marginBottom: '24px',
               padding: '12px',

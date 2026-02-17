@@ -42,6 +42,7 @@ export function TextInputPanel({
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
       <textarea
+        data-testid="text-input"
         ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}

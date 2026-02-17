@@ -1,0 +1,121 @@
+import { test, expect } from '@playwright/test';
+import { _electron as electron, ElectronApplication, Page } from 'playwright';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const mainPath = path.join(__dirname, '../../dist/main/index.js');
+const ciArgs = process.env.ELECTRON_DISABLE_SANDBOX
+  ? ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+  : [];
+const launchArgs = [mainPath, ...ciArgs];
+
+let electronApp: ElectronApplication;
+let window: Page;
+
+test.beforeAll(async () => {
+  electronApp = await electron.launch({
+    args: launchArgs,
+    timeout: 60000,
+  });
+  window = await electronApp.firstWindow({ timeout: 60000 });
+});
+
+test.afterAll(async () => {
+  if (electronApp) {
+    await electronApp.close();
+  }
+});
+
+test.describe('Electron App Launch', () => {
+  test('app launches successfully', async () => {
+    expect(electronApp).toBeTruthy();
+    expect(window).toBeTruthy();
+  });
+
+  test('window has correct title', async () => {
+    const title = await window.title();
+    expect(title).toContain('TTS Local');
+  });
+
+  test('window displays text input area', async () => {
+    const textarea = window.locator('textarea');
+    await expect(textarea).toBeVisible();
+  });
+
+  test('window displays Speak button', async () => {
+    const speakButton = window.locator('button:has-text("Speak")');
+    await expect(speakButton).toBeVisible();
+  });
+
+  test('app has proper window dimensions', async () => {
+    const size = await window.evaluate(() => ({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    }));
+
+    expect(size.width).toBeGreaterThan(400);
+    expect(size.height).toBeGreaterThan(300);
+  });
+
+  test('window is not in fullscreen mode initially', async () => {
+    const isFullscreen = await electronApp.evaluate(({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      return win?.isFullScreen() ?? false;
+    });
+
+    expect(isFullscreen).toBe(false);
+  });
+
+  test('window can be focused', async () => {
+    await electronApp.evaluate(({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      win?.focus();
+    });
+    const isFocused = await electronApp.evaluate(({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      return win?.isFocused() ?? false;
+    });
+
+    expect(isFocused).toBe(true);
+  });
+});
+
+test.describe('App Menu', () => {
+  test('app has menu bar', async () => {
+    const hasMenu = await electronApp.evaluate(({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      return win?.menuBarVisible !== false;
+    });
+
+    expect(hasMenu).toBeTruthy();
+  });
+});
+
+test.describe('Initial State', () => {
+  test('textarea is empty initially', async () => {
+    const textarea = window.locator('textarea');
+    const value = await textarea.inputValue();
+
+    expect(value).toBe('');
+  });
+
+  test('status indicator is visible', async () => {
+    const statusBar = window.locator('[data-testid="status-bar"]');
+    await expect(statusBar).toBeVisible();
+  });
+
+  test('status text is displayed', async () => {
+    const status = window.locator('[data-testid="status"]');
+    await expect(status).toBeVisible();
+    const text = await status.textContent();
+    expect(text).toBeTruthy();
+  });
+
+  test('Settings button is visible', async () => {
+    const settingsButton = window.locator('button:has-text("Settings")');
+    await expect(settingsButton).toBeVisible();
+  });
+});
