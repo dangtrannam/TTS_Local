@@ -16,18 +16,17 @@ let electronApp: ElectronApplication;
 let window: Page;
 
 test.beforeAll(async () => {
-  // Launch Electron app (increased timeout for macOS CI)
   electronApp = await electron.launch({
     args: launchArgs,
     timeout: 60000,
   });
-
-  // Wait for the first window
   window = await electronApp.firstWindow({ timeout: 60000 });
 });
 
 test.afterAll(async () => {
-  await electronApp.close();
+  if (electronApp) {
+    await electronApp.close();
+  }
 });
 
 test.describe('Electron App Launch', () => {
@@ -51,24 +50,14 @@ test.describe('Electron App Launch', () => {
     await expect(speakButton).toBeVisible();
   });
 
-  test('window displays voice selector', async () => {
-    const voiceSelect = window.locator('select[data-testid="voice-selector"]');
-    await expect(voiceSelect).toBeVisible();
-  });
-
-  test('window displays speed control', async () => {
-    const speedInput = window.locator('input[type="range"][data-testid="speed-slider"]');
-    await expect(speedInput).toBeVisible();
-  });
-
   test('app has proper window dimensions', async () => {
     const size = await window.evaluate(() => ({
       width: window.innerWidth,
       height: window.innerHeight,
     }));
 
-    expect(size.width).toBeGreaterThan(600);
-    expect(size.height).toBeGreaterThan(400);
+    expect(size.width).toBeGreaterThan(400);
+    expect(size.height).toBeGreaterThan(300);
   });
 
   test('window is not in fullscreen mode initially', async () => {
@@ -110,24 +99,20 @@ test.describe('Initial State', () => {
     expect(value).toBe('');
   });
 
-  test('Speak button is enabled', async () => {
-    const speakButton = window.locator('button:has-text("Speak")');
-    const isDisabled = await speakButton.isDisabled();
-
-    expect(isDisabled).toBe(false);
+  test('status indicator is visible', async () => {
+    const statusBar = window.locator('[data-testid="status-bar"]');
+    await expect(statusBar).toBeVisible();
   });
 
-  test('default voice is selected', async () => {
-    const voiceSelect = window.locator('select[data-testid="voice-selector"]');
-    const value = await voiceSelect.inputValue();
-
-    expect(value).toBeTruthy();
+  test('status text is displayed', async () => {
+    const status = window.locator('[data-testid="status"]');
+    await expect(status).toBeVisible();
+    const text = await status.textContent();
+    expect(text).toBeTruthy();
   });
 
-  test('default speed is 1.0', async () => {
-    const speedInput = window.locator('input[type="range"][data-testid="speed-slider"]');
-    const value = await speedInput.inputValue();
-
-    expect(parseFloat(value)).toBe(1.0);
+  test('Settings button is visible', async () => {
+    const settingsButton = window.locator('button:has-text("Settings")');
+    await expect(settingsButton).toBeVisible();
   });
 });

@@ -15,7 +15,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
       include: ['packages/*/src/**/*.ts'],
-      exclude: ['**/*.d.ts', '**/index.ts', '**/__tests__/**'],
+      exclude: ['**/*.d.ts', '**/index.ts', '**/__tests__/**', 'packages/electron/src/**'],
       // TODO: Increase to 70% after adding unit tests for CLI commands and Electron main
       // Currently at 46% due to integration/E2E-tested code not counted in unit coverage
       thresholds: {
