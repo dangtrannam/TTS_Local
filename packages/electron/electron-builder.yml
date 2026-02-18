@@ -39,12 +39,5 @@ linux:
   target:
     - target: AppImage
       arch: [x64]
-    - target: deb
-      arch: [x64]
   category: Utility
   icon: resources/icon.png
-
-publish:
-  provider: github
-  owner: dangtrannam
-  repo: TTS_Local
