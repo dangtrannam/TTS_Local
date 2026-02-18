@@ -62,7 +62,7 @@ if [ "${TARGET_PLATFORM}" != "win32" ]; then
 fi
 
 # Verify bundled binary is executable
-BINARY_PATH="${OUTPUT_DIR}/$([ '${TARGET_PLATFORM}' = 'win32' ] && echo 'piper.exe' || echo 'piper')"
+BINARY_PATH="${OUTPUT_DIR}/$([ "${TARGET_PLATFORM}" = 'win32' ] && echo 'piper.exe' || echo 'piper')"
 if [ ! -f "${BINARY_PATH}" ]; then
   echo "ERROR: Piper binary not found at ${BINARY_PATH}"
   exit 1
