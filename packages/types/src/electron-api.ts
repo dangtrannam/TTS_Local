@@ -1,4 +1,4 @@
-import type { TTSOptions, SynthesisProgress, PiperConfig, DownloadProgress } from './tts-types.js';
+import type { TTSOptions, SynthesisProgress, PiperConfig } from './tts-types.js';
 
 /** Voice model information */
 export interface VoiceInfo {
@@ -35,7 +35,7 @@ export interface ElectronTTSAPI {
   /** Subscribe to synthesis progress events */
   onProgress: (callback: (progress: SynthesisProgress) => void) => () => void;
   /** Subscribe to setup progress events */
-  onSetupProgress: (callback: (progress: DownloadProgress) => void) => () => void;
+  onSetupProgress: (callback: (progress: SynthesisProgress) => void) => () => void;
 }
 
 declare global {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { DownloadProgress } from '@tts-local/types';
+import type { SynthesisProgress } from '@tts-local/types';
 
 interface SetupWizardProps {
   isOpen: boolean;
@@ -7,7 +7,7 @@ interface SetupWizardProps {
 }
 
 export function SetupWizard({ isOpen, onComplete }: SetupWizardProps): React.ReactElement | null {
-  const [progress, setProgress] = useState<DownloadProgress | null>(null);
+  const [progress, setProgress] = useState<SynthesisProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -79,7 +79,7 @@ export function SetupWizard({ isOpen, onComplete }: SetupWizardProps): React.Rea
         {progress && (
           <div style={{ marginBottom: '24px' }}>
             <div style={{ marginBottom: '8px', fontSize: '14px', fontWeight: 500 }}>
-              {`Downloading... ${progress.bytesDownloaded.toLocaleString()} / ${progress.totalBytes.toLocaleString()} bytes`}
+              {progress.message || 'Working...'}
             </div>
             {progress.percent !== undefined && (
               <div
