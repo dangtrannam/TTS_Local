@@ -69,6 +69,21 @@ const schemas: IPCSchema[] = [
     },
   },
   {
+    channel: 'tts:preprocess-text',
+    validate: ([text, mode]: unknown[]): IPCValidationResult => {
+      if (typeof text !== 'string' || text.length === 0) {
+        return { valid: false, error: 'tts:preprocess-text: text must be a non-empty string' };
+      }
+      if (mode !== 'narrate' && mode !== 'summarize') {
+        return {
+          valid: false,
+          error: 'tts:preprocess-text: mode must be "narrate" or "summarize"',
+        };
+      }
+      return { valid: true };
+    },
+  },
+  {
     channel: 'tts:set-config',
     validate: ([key, value]: unknown[]): IPCValidationResult => {
       const allowedKeys = ['defaultVoice', 'speed'];
