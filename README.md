@@ -392,14 +392,19 @@ chmod +x ~/.local/bin/piper               # Linux
 - [System Architecture](./docs/system-architecture.md) - Technical architecture details
 - [Code Standards](./docs/code-standards.md) - Coding conventions and guidelines
 - [Codebase Summary](./docs/codebase-summary.md) - Package overview
+- [Security Guide](./docs/security-guide.md) - Electron security model and audit checklist
+- [Deployment Guide](./docs/deployment-guide.md) - Per-platform build and release instructions
+- [Troubleshooting](./docs/troubleshooting.md) - Common issues and fixes
 
 ## 🗺️ Roadmap
 
 - [x] **Phase 01**: Foundation & Monorepo Setup
 - [x] **Phase 02**: Core TTS Implementation
 - [x] **Phase 03**: CLI Application
-- [ ] **Phase 04**: Desktop Application (Electron GUI)
-- [ ] **Phase 05**: Testing & Finalization
+- [x] **Phase 04**: Desktop Application (Electron GUI)
+- [x] **Phase 05**: Testing & QA
+- [x] **Phase 06**: Packaging & Distribution
+- [x] **Phase 07**: Documentation & Onboarding
 
 See [Project Roadmap](./docs/project-roadmap.md) for detailed milestones.
 
