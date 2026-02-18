@@ -20,7 +20,7 @@ export function useTTS(): UseTTSReturn {
   const [status, setStatus] = useState<TTSStatus>('idle');
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { play, stop: stopAudio, isPlaying } = useAudioPlayer();
+  const { play, stop: stopAudio } = useAudioPlayer();
 
   /**
    * Check if TTS system is ready on mount
@@ -30,15 +30,6 @@ export function useTTS(): UseTTSReturn {
       setIsReady(ready);
     });
   }, []);
-
-  /**
-   * Update status based on audio playback
-   */
-  useEffect(() => {
-    if (status === 'playing' && !isPlaying) {
-      setStatus('idle');
-    }
-  }, [isPlaying, status]);
 
   /**
    * Synthesize text and play audio
