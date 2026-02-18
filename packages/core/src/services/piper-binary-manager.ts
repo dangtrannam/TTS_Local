@@ -3,16 +3,32 @@ import path from 'node:path';
 import os from 'node:os';
 import type { DownloadProgress } from '@tts-local/types';
 import { TTSError, TTSErrorCode } from '@tts-local/types';
+import { getElectronResourcesPath } from '../utils/electron-helper.js';
 
 const PIPER_VERSION = '1.4.1';
 
 /**
  * Manages Piper TTS installation via pip.
  * Uses Python package piper-tts instead of GitHub releases for better macOS compatibility.
+ * In packaged Electron app, uses bundled binary from resources.
  */
 export class PiperBinaryManager {
-  /** Get absolute path to the piper executable from pip user install */
+  /** Get absolute path to the piper executable, checking bundled binary first */
   getBinaryPath(): string {
+    // Check if running in packaged Electron app
+    const resourcesPath = getElectronResourcesPath();
+    if (resourcesPath) {
+      const bundledPath = path.join(
+        resourcesPath,
+        'piper',
+        process.platform === 'win32' ? 'piper.exe' : 'piper',
+      );
+      // Note: We can't check existence synchronously here, but we return the path
+      // The ensureBinary method will handle verification
+      return bundledPath;
+    }
+
+    // Fallback to pip-installed binary
     const homeDir = os.homedir();
 
     // Common Python user bin locations
@@ -34,6 +50,15 @@ export class PiperBinaryManager {
 
     if (await this.binaryExists(binaryPath)) {
       return binaryPath;
+    }
+
+    // If bundled binary doesn't exist but we're in packaged app, throw error
+    // User should have received app with bundled binary
+    if (getElectronResourcesPath()) {
+      throw new TTSError(
+        TTSErrorCode.BINARY_NOT_FOUND,
+        'Bundled Piper binary not found in packaged application. Please reinstall the app.',
+      );
     }
 
     await this.installViaPip(onProgress);

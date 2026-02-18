@@ -1,8 +1,8 @@
 # System Architecture
 
 **Project**: TTS_Local
-**Last Updated**: 2026-02-16
-**Phase**: Phase 04 Complete (Electron Desktop Application)
+**Last Updated**: 2026-02-17
+**Phase**: Phase 06 Complete (Packaging & Distribution)
 
 ---
 
@@ -731,16 +731,63 @@ packages/electron/src/
 
 ---
 
-## Future Architecture Changes
+## Packaging & Distribution Architecture (Phase 06)
 
-### Phase 05 (Optimization)
-- Add binary caching layer
-- Add voice model preloading
-- Add synthesis queue for batch processing
-- Add streaming synthesis (chunked text)
+### Electron Installer Build Flow
+
+```
+scripts/bundle-piper.sh <platform> <arch>
+    │
+    ├─► Download Piper binary from GitHub releases
+    ├─► Extract to packages/electron/resources/piper/
+    ├─► Download default voice (en_US-amy-medium) to resources/piper/models/
+    └─► Set executable permissions (Unix)
+         │
+         ▼
+electron-builder --mac|win|linux --config electron-builder.yml
+    │
+    ├─► Packages dist/ + resources/piper/ via extraResources
+    ├─► macOS: DMG (arm64 + x64), hardenedRuntime=true
+    ├─► Windows: NSIS installer (x64, per-user)
+    └─► Linux: AppImage + deb (x64)
+```
+
+### Bundled Resource Detection (`electron-helper.ts`)
+
+When running as a packaged Electron app, core services check for bundled resources before falling back to downloaded paths.
+
+```
+getElectronResourcesPath()
+    │
+    ├─► process.resourcesPath exists? → bundled binary/models at resources/piper/
+    └─► undefined → downloaded paths ({appData}/bin/piper/, {appData}/models/)
+```
+
+**Affected Services:**
+- `PiperBinaryManager`: checks `resources/piper/piper[.exe]` first
+- `PiperVoiceManager`: checks `resources/piper/models/{voice}/` first
+
+### GitHub Actions Release Workflow
+
+Triggered by `v*` tag push. Three parallel jobs:
+
+| Job | Runner | Artifact |
+|-----|--------|----------|
+| `build-mac` | macos-latest | `.dmg` |
+| `build-win` | windows-latest | `.exe` (NSIS) |
+| `build-linux` | ubuntu-latest | `.AppImage` |
+
+All artifacts are collected by `create-release` job and published to GitHub Release.
+
+### CLI npm Distribution
+
+`@tts-local/cli` package configured for npm registry:
+- `publishConfig.access: public`
+- `files` field restricts publish to `dist/` + `README.md`
+- `prepublishOnly` runs build before publish
 
 ---
 
 **Diagram Generation**: ASCII art created manually
-**Last Reviewed**: 2026-02-16
-**Next Review**: After Phase 05 Testing and Finalization
+**Last Reviewed**: 2026-02-17
+**Next Review**: After Phase 07 Documentation
