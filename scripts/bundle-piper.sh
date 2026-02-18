@@ -15,7 +15,8 @@ trap cleanup EXIT ERR
 
 TARGET_PLATFORM="${1:?Usage: bundle-piper.sh <platform> <arch>}"
 TARGET_ARCH="${2:?Usage: bundle-piper.sh <platform> <arch>}"
-OUTPUT_DIR="packages/electron/resources/piper"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OUTPUT_DIR="${SCRIPT_DIR}/../packages/electron/resources/piper"
 VOICE="en_US-amy-medium"
 
 # Map platform+arch to download URL
