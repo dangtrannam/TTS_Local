@@ -50,18 +50,20 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
         source.buffer = buffer;
         source.connect(audioContext.destination);
 
-        // Track playback state
-        source.onended = () => {
-          setIsPlaying(false);
-          sourceNodeRef.current = null;
-        };
-
         // Store reference for stop functionality
         sourceNodeRef.current = source;
         setIsPlaying(true);
 
-        // Start playback
+        // Start playback and return promise that resolves when audio ends
         source.start(0);
+
+        return new Promise<void>((resolve) => {
+          source.onended = () => {
+            setIsPlaying(false);
+            sourceNodeRef.current = null;
+            resolve();
+          };
+        });
       } catch (error) {
         setIsPlaying(false);
         throw new Error(

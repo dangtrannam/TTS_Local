@@ -14,6 +14,14 @@
  * @returns Absolute path to Electron resources directory, or undefined if not packaged
  */
 export function getElectronResourcesPath(): string | undefined {
+  // Only use bundled resources when running as a truly packaged Electron app.
+  // process.resourcesPath exists in both dev and packaged Electron, so we rely
+  // on ELECTRON_IS_PACKAGED (set in main/index.ts) to tell them apart.
+  // In dev mode this returns undefined, allowing fallback to pip-installed binary.
+  if (process.env.ELECTRON_IS_PACKAGED !== '1') {
+    return undefined;
+  }
+
   // TypeScript doesn't know about process.resourcesPath (Electron-specific)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const electronProcess = process as any;

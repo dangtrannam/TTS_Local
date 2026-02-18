@@ -7,7 +7,7 @@ import { SettingsPanel } from './components/settings-panel.js';
 import { SetupWizard } from './components/setup-wizard.js';
 
 export function App(): React.ReactElement {
-  const { status, isReady, error, speak, stop } = useTTS();
+  const { status, isReady, error, speak, stop, refreshReady } = useTTS();
   const [text, setText] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
@@ -49,10 +49,7 @@ export function App(): React.ReactElement {
 
   const handleSetupComplete = () => {
     setShowSetupWizard(false);
-    // Refresh ready state
-    window.ttsAPI.isReady().then(() => {
-      // Ready state will be updated by the hook
-    });
+    refreshReady();
   };
 
   const canPlay = isReady && text.trim().length > 0 && status === 'idle';

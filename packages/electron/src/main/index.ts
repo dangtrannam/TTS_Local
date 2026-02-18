@@ -4,6 +4,13 @@
  */
 
 import { app, BrowserWindow, session } from 'electron';
+
+// Signal to core packages whether this is a packaged build.
+// process.resourcesPath exists in both dev and packaged, so we need this flag
+// to distinguish them and prevent bundled-binary-not-found errors in dev mode.
+if (app.isPackaged) {
+  process.env.ELECTRON_IS_PACKAGED = '1';
+}
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -55,10 +62,8 @@ function createWindow(): void {
     return { action: 'deny' };
   });
 
-  // Open DevTools only in development with dev server running
-  if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
-    mainWindow.webContents.openDevTools();
-  }
+  // DevTools: open manually with Cmd+Option+I (macOS) or F12 (Win/Linux)
+  // Auto-opening is intentionally disabled to avoid Chromium DevTools log spam.
 
   // Load renderer HTML
   // Use ELECTRON_RENDERER_URL if set (electron-vite dev mode),
