@@ -10,6 +10,7 @@ interface UseTTSReturn {
   error: string | null;
   speak: (text: string, options?: Partial<TTSOptions>) => Promise<void>;
   stop: () => void;
+  refreshReady: () => Promise<void>;
 }
 
 /**
@@ -76,11 +77,20 @@ export function useTTS(): UseTTSReturn {
     setError(null);
   }, [stopAudio]);
 
+  /**
+   * Re-check TTS ready state — call after setup wizard completes
+   */
+  const refreshReady = useCallback(async () => {
+    const ready = await window.ttsAPI.isReady();
+    setIsReady(ready);
+  }, []);
+
   return {
     status,
     isReady,
     error,
     speak,
     stop,
+    refreshReady,
   };
 }
