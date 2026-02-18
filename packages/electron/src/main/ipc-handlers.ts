@@ -1,5 +1,11 @@
 import { ipcMain, type BrowserWindow } from 'electron';
-import { PiperTTSService, PiperVoiceManager, getAppPaths } from '@tts-local/core';
+import {
+  PiperTTSService,
+  PiperVoiceManager,
+  GeminiPreprocessorService,
+  getAppPaths,
+} from '@tts-local/core';
+import type { PreprocessMode } from '@tts-local/core';
 import type { VoiceInfo } from '@tts-local/types';
 import { validateIPC } from './ipc-validator.js';
 import { promises as fs } from 'node:fs';
@@ -7,6 +13,7 @@ import { promises as fs } from 'node:fs';
 // Lazy-initialized TTS service instances (avoid module-level side effects)
 let ttsService: PiperTTSService | null = null;
 let voiceManager: PiperVoiceManager | null = null;
+let preprocessorService: GeminiPreprocessorService | null = null;
 
 function getTTSService(): PiperTTSService {
   if (!ttsService) {
@@ -21,6 +28,13 @@ function getVoiceManager(): PiperVoiceManager {
     voiceManager = new PiperVoiceManager(paths.models);
   }
   return voiceManager;
+}
+
+function getPreprocessorService(): GeminiPreprocessorService {
+  if (!preprocessorService) {
+    preprocessorService = new GeminiPreprocessorService();
+  }
+  return preprocessorService;
 }
 
 /**
@@ -122,6 +136,16 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
     // Update in-memory config (persistence can be added later)
     getTTSService().setConfig(key as keyof import('@tts-local/types').PiperConfig, value);
   });
+
+  /**
+   * Preprocess text with Gemini AI for natural speech
+   */
+  ipcMain.handle('tts:preprocess-text', async (_event, text: string, mode: string) => {
+    validateIPC('tts:preprocess-text', [text, mode]);
+    const processMode = (mode === 'summarize' ? 'summarize' : 'narrate') as PreprocessMode;
+    const result = await getPreprocessorService().processText(text, processMode);
+    return result;
+  });
 }
 
 /**
@@ -134,4 +158,5 @@ export function unregisterIPCHandlers(): void {
   ipcMain.removeHandler('tts:list-voices');
   ipcMain.removeHandler('tts:get-config');
   ipcMain.removeHandler('tts:set-config');
+  ipcMain.removeHandler('tts:preprocess-text');
 }

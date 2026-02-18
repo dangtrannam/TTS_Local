@@ -32,6 +32,11 @@ export interface ElectronTTSAPI {
   getConfig: () => Promise<PiperConfig>;
   /** Update configuration setting */
   setConfig: (key: string, value: unknown) => Promise<void>;
+  /** Preprocess text with Gemini AI for natural speech */
+  preprocessText: (
+    text: string,
+    mode: string,
+  ) => Promise<{ text: string; fallback: boolean; error?: { message: string } }>;
   /** Subscribe to synthesis progress events */
   onProgress: (callback: (progress: SynthesisProgress) => void) => () => void;
   /** Subscribe to setup progress events */
