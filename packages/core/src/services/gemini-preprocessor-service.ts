@@ -6,7 +6,6 @@ export type PreprocessMode = 'narrate' | 'summarize';
 export type PreprocessResult = { text: string; fallback: boolean; error?: Error };
 
 const DEFAULT_MODEL = 'gemini-2.0-flash';
-const MAX_CHUNK_CHARS = 4000;
 
 const PROMPTS: Record<PreprocessMode, string> = {
   narrate: `Convert the following document to natural spoken prose for text-to-speech playback.
@@ -44,16 +43,11 @@ export class GeminiPreprocessorService {
     this.model = model;
   }
 
-  /** Process text through Gemini AI. Returns original text (fallback) if Gemini fails. */
+  /** Process text through Gemini AI in a single call. Returns original text (fallback) if Gemini fails. */
   async processText(text: string, mode: PreprocessMode): Promise<PreprocessResult> {
     this.validateApiKey();
-    const chunks = this.chunkText(text);
-    const results: string[] = [];
     try {
-      for (const chunk of chunks) {
-        results.push(await this.callGemini(chunk, mode));
-      }
-      return { text: results.join('\n\n'), fallback: false };
+      return { text: await this.callGemini(text, mode), fallback: false };
     } catch (error) {
       return {
         text,
@@ -80,32 +74,8 @@ export class GeminiPreprocessorService {
     return this.client;
   }
 
-  /** Split text at ## / ### headers; sub-split oversized sections at blank lines. */
-  private chunkText(text: string): string[] {
-    const sections = text.split(/(?=^#{2,3} )/m).filter((s) => s.trim());
-    const chunks: string[] = [];
-    for (const section of sections) {
-      if (section.length <= MAX_CHUNK_CHARS) {
-        chunks.push(section);
-      } else {
-        const parts = section.split(/\n\n+/).filter((p) => p.trim());
-        let current = '';
-        for (const part of parts) {
-          if (current.length + part.length > MAX_CHUNK_CHARS && current) {
-            chunks.push(current.trim());
-            current = part;
-          } else {
-            current = current ? `${current}\n\n${part}` : part;
-          }
-        }
-        if (current.trim()) chunks.push(current.trim());
-      }
-    }
-    return chunks.length > 0 ? chunks : [text];
-  }
-
-  private async callGemini(chunk: string, mode: PreprocessMode): Promise<string> {
-    const prompt = PROMPTS[mode].replace('{content}', chunk);
+  private async callGemini(text: string, mode: PreprocessMode): Promise<string> {
+    const prompt = PROMPTS[mode].replace('{content}', text);
     try {
       const response = await this.getClient().models.generateContent({
         model: this.model,

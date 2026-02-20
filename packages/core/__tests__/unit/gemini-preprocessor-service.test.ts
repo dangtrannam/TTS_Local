@@ -32,16 +32,14 @@ describe('GeminiPreprocessorService', () => {
     expect(result.text).toBe('Processed text.');
   });
 
-  it('calls Gemini per chunk for text with ## headers', async () => {
+  it('calls Gemini once for text with ## headers (1-shot)', async () => {
     const svc = new GeminiPreprocessorService('test-key');
     const text = '## Section 1\nContent one.\n\n## Section 2\nContent two.';
-    mockGenerateContent
-      .mockResolvedValueOnce({ text: 'Chunk one output.' })
-      .mockResolvedValueOnce({ text: 'Chunk two output.' });
+    mockGenerateContent.mockResolvedValueOnce({ text: 'Full narrated output.' });
     const result = await svc.processText(text, 'narrate');
-    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
     expect(result.fallback).toBe(false);
-    expect(result.text).toBe('Chunk one output.\n\nChunk two output.');
+    expect(result.text).toBe('Full narrated output.');
   });
 
   it('returns fallback=true on Gemini API error (fail-open)', async () => {
@@ -68,13 +66,14 @@ describe('GeminiPreprocessorService', () => {
     expect(calledContents).toContain('Convert the following document');
   });
 
-  it('returns text joined with double newline for multi-chunk', async () => {
+  it('sends full text to Gemini and returns response as-is', async () => {
     const svc = new GeminiPreprocessorService('test-key');
-    mockGenerateContent
-      .mockResolvedValueOnce({ text: 'Part A.' })
-      .mockResolvedValueOnce({ text: 'Part B.' });
     const text = '## Alpha\nContent alpha.\n\n## Beta\nContent beta.';
+    mockGenerateContent.mockResolvedValueOnce({ text: 'Single combined output.' });
     const result = await svc.processText(text, 'narrate');
-    expect(result.text).toBe('Part A.\n\nPart B.');
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+    const sentPrompt = mockGenerateContent.mock.calls[0][0].contents as string;
+    expect(sentPrompt).toContain(text);
+    expect(result.text).toBe('Single combined output.');
   });
 });
