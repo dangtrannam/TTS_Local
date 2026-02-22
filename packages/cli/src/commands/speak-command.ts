@@ -3,7 +3,8 @@
  * Synthesizes text to speech and plays or saves audio
  */
 import { Command } from 'commander';
-import { PiperTTSService } from '@tts-local/core';
+import { PiperTTSService, GeminiPreprocessorService } from '@tts-local/core';
+import type { PreprocessMode } from '@tts-local/core';
 import { TTSError, TTSErrorCode } from '@tts-local/types';
 import { readInput } from '../utils/input-reader.js';
 import { createAudioPlayer } from '../utils/audio-player.js';
@@ -25,6 +26,8 @@ interface SpeakOptions {
   voice?: string;
   speed?: string;
   timeout?: string;
+  preprocess?: boolean;
+  preprocessMode?: string;
 }
 
 /**
@@ -39,6 +42,8 @@ export function registerSpeakCommand(program: Command): void {
     .option('-v, --voice <name>', 'Voice model name')
     .option('-s, --speed <rate>', 'Speech rate (0.5-2.0)', '1.0')
     .option('-t, --timeout <ms>', 'Synthesis timeout in milliseconds (default: 30000)', '30000')
+    .option('--preprocess', 'Preprocess text with Gemini AI for natural speech')
+    .option('--preprocess-mode <mode>', 'Preprocessing mode: narrate or summarize', 'narrate')
     .action(async (text: string | undefined, options: SpeakOptions) => {
       try {
         await handleSpeakCommand(text, options);
@@ -60,7 +65,29 @@ async function handleSpeakCommand(
   options: SpeakOptions,
 ): Promise<void> {
   // Read input from argument, file, or stdin
-  const text = await readInput(textArg, options.file);
+  let text = await readInput(textArg, options.file);
+
+  // Gemini preprocessing (optional, fail-open)
+  if (options.preprocess) {
+    const mode = (
+      options.preprocessMode === 'summarize' ? 'summarize' : 'narrate'
+    ) as PreprocessMode;
+    const preprocessSpinner = showSpinner('Preprocessing with Gemini AI...');
+    try {
+      const preprocessor = new GeminiPreprocessorService();
+      const result = await preprocessor.processText(text, mode);
+      if (result.fallback) {
+        preprocessSpinner.warn('Gemini preprocessing failed, using original text');
+        showInfo(`⚠ ${result.error?.message ?? 'Preprocessing failed'}`);
+      } else {
+        preprocessSpinner.succeed('Preprocessing complete');
+        text = result.text;
+      }
+    } catch (error) {
+      preprocessSpinner.fail('Preprocessing failed');
+      throw error;
+    }
+  }
 
   // Parse and validate speed
   const speed = parseFloat(options.speed || '1.0');

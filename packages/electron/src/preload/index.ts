@@ -64,6 +64,18 @@ const ttsAPI = {
   },
 
   /**
+   * Preprocess text with Gemini AI for natural speech
+   * @param text - Text to preprocess
+   * @param mode - 'narrate' or 'summarize'
+   * @returns PreprocessResult with processed text and fallback flag
+   */
+  preprocessText: (
+    text: string,
+    mode: string,
+  ): Promise<{ text: string; fallback: boolean; error?: { message: string } }> =>
+    ipcRenderer.invoke('tts:preprocess-text', String(text), String(mode)),
+
+  /**
    * Subscribe to synthesis progress events
    * @param callback - Called when progress updates are received
    * @returns Cleanup function to unsubscribe

@@ -19,6 +19,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@google/genai": "^1.0.0",
     "@tts-local/types": "workspace:*",
     "execa": "^9.6.1",
     "fs-extra": "^11.3.3",

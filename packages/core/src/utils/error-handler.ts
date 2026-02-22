@@ -43,6 +43,11 @@ const ERROR_MESSAGES: Record<TTSErrorCode, string> = {
   [TTSErrorCode.INVALID_CONFIG]: 'Invalid configuration. Check your settings.',
   [TTSErrorCode.INVALID_CONFIG_KEY]: 'Invalid configuration key. Use: defaultVoice, speed',
   [TTSErrorCode.INVALID_CONFIG_VALUE]: 'Invalid configuration value. Check the allowed range.',
+  // Gemini preprocessing errors
+  [TTSErrorCode.GEMINI_API_KEY_MISSING]:
+    'Gemini API key not set. Run: export GEMINI_API_KEY=your_key (get one at https://aistudio.google.com/)',
+  [TTSErrorCode.PREPROCESS_FAILED]:
+    'Gemini preprocessing failed. Text-to-speech used original text.',
 };
 
 /** Format a TTSError into a human-readable message with suggested fix */
